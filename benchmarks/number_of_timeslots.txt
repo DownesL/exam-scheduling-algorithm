@@ -1,0 +1,13 @@
+car-f-92.crs:32
+car-s-91.crs:35
+ear-f-83.crs:24
+hec-s-92.crs:18
+kfu-s-93.crs:20
+lse-f-91.crs:18
+pur-s-93.crs:42
+rye-s-93.crs:23
+sta-f-83.crs:13
+tre-s-92.crs:23
+uta-s-92.crs:35
+ute-s-92.crs:10
+yor-f-83.crs:21
