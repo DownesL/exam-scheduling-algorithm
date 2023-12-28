@@ -10,7 +10,7 @@ public class Main {
     public static void main(String[] args) {
         dataReader = new DataReader("benchmarks/sta-f-83.crs","benchmarks/sta-f-83.stu");
         SearchAlgorithm searchAlgorithm = new CustomSearch(dataReader);
-        searchAlgorithm.execute(100000);
+        searchAlgorithm.execute(10000);
         System.out.println(dataReader.getExams());
     }
 }

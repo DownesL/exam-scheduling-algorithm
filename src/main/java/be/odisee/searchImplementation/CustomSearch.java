@@ -20,6 +20,7 @@ public class CustomSearch implements SearchAlgorithm {
     Map<Integer, Exam> exams;
     Map<TimeSlot, List<Exam>> timeSlots;
     Map<Integer, Student> students;
+    TimeSlot[] timeSlotKeys;
 
     public CustomSearch(DataReader dataReader) {
         this.dataReader = dataReader;
@@ -33,6 +34,7 @@ public class CustomSearch implements SearchAlgorithm {
         dataReader.getTimeslots().forEach(
                 timeSlot -> timeSlots.put(timeSlot, new ArrayList<>())
         );
+        timeSlotKeys = timeSlots.keySet().toArray(TimeSlot[]::new);
         exams = dataReader.getExams();
         students = dataReader.getStudents();
 
@@ -42,17 +44,16 @@ public class CustomSearch implements SearchAlgorithm {
         fillTimeTable();
 
         bestSolution.setScore(calculateTotalScore(currentSolution));
-        bestSolution.getObjectiveValue();
     }
 
     private void fillTimeTable() {
-        Stack<Student> studentQueue = (students
+        Queue<Student> studentQueue = students
                 .values()
                 .stream()
                 .sorted(
                         Comparator.comparingInt(s -> s.getExamIds().size())
                 )
-                .collect(Collectors.toCollection(Stack::new)));
+                .collect(Collectors.toCollection(PriorityQueue::new));
 
         //ids of all the exams that have been added to the timeSlots
         Set<Integer> examIds = new LinkedHashSet<>();
@@ -61,7 +62,7 @@ public class CustomSearch implements SearchAlgorithm {
         Arrays.sort(initialTimeSlotIterator);
 
         while (!studentQueue.isEmpty()) {
-            Student student = studentQueue.pop();
+            Student student = studentQueue.poll();
             Set<Integer> sEids = new HashSet<>(student.getExamIds());
 
             //This iterator makes sure the timeslots are filled from start to end
@@ -132,11 +133,13 @@ public class CustomSearch implements SearchAlgorithm {
 
         int count = 0;
         for (int i = 0; i < numberOfIterations; i++) {
-            count = performExamSwitcheroo(random, count);
-            continue;
+            if (i % 5 == 0) {
+                count = performTimeSlotSwitcheroo(random, count);
 
+            } else {
+                count = performExamSwitcheroo(random, count);
+            }
 //            System.out.println(newScore);
-
         }
 
         System.out.println("final score: " + bestSolution.getScore());
@@ -159,15 +162,15 @@ public class CustomSearch implements SearchAlgorithm {
         supplierIndex = indexArr[0];
         receiverIndex = indexArr[1];
 
-        TimeSlot[] keySet = timeSlots.keySet().toArray(TimeSlot[]::new);
-
-        TimeSlot supplierTimeslot = keySet[supplierIndex];
-        TimeSlot receiverTimeslot = keySet[receiverIndex];
+        TimeSlot supplierTimeslot = timeSlotKeys[supplierIndex];
+        TimeSlot receiverTimeslot = timeSlotKeys[receiverIndex];
 
         List<Exam> supplierExams = timeSlots.get(supplierTimeslot);
         List<Exam> receiverExams = timeSlots.get(receiverTimeslot);
 
-        if (supplierExams.isEmpty()) {return count;}
+        if (supplierExams.isEmpty()) {
+            return count;
+        }
 
         packetIndex = random.nextInt(supplierExams.size());
         Exam packet = supplierExams.get(packetIndex);
@@ -199,16 +202,40 @@ public class CustomSearch implements SearchAlgorithm {
     }
 
     private int performTimeSlotSwitcheroo(Random random, int count) {
-        int timeslot1Index, timeslot2Index, packetIndex;
+        int timeslot1Index, timeslot2Index;
 
         int[] indexArr = getRandomIndexes(random);
 
-        timeslot2Index = indexArr[0];
-        timeslot1Index = indexArr[1];
+        timeslot1Index = indexArr[0];
+        timeslot2Index = indexArr[1];
 
+        TimeSlot timeSlot1 = timeSlotKeys[timeslot1Index];
+        TimeSlot timeSlot2 = timeSlotKeys[timeslot2Index];
 
+        timeslotSwap(timeSlot1, timeSlot2);
 
+        currentSolution.setTimeSlots(timeSlots);
+
+        double newScore = calculateTotalScore(currentSolution);
+        currentSolution.setScore(newScore);
+
+        if (newScore < bestSolution.getScore()) {
+            bestSolution = currentSolution.clone();
+            count++;
+        } else {
+            timeslotSwap(timeSlot1, timeSlot2);
+        }
         return count;
+    }
+
+    private void timeslotSwap(TimeSlot timeSlot1, TimeSlot timeSlot2) {
+        List<Exam> examList1 = timeSlots.get(timeSlot1);
+        List<Exam> examList2 = timeSlots.get(timeSlot2);
+        List<Exam> temp = new ArrayList<>(examList1);
+        examList1 = new ArrayList<>(examList2);
+        examList2 = new ArrayList<>(temp);
+        timeSlots.put(timeSlot1, examList1);
+        timeSlots.put(timeSlot2, examList2);
     }
 
     private int[] getRandomIndexes(Random random) {
@@ -285,9 +312,7 @@ public class CustomSearch implements SearchAlgorithm {
             Arrays.fill(schedule, 0);
             for (int examId : examIds) {
                 Optional<TimeSlot> ts = getExamIndex(solution, examId);
-                if (ts.isPresent()) {
-                    schedule[ts.get().getID()] = 1;
-                }
+                ts.ifPresent(timeSlot -> schedule[timeSlot.getID()] = 1);
             }
             int last = -1;
             for (int i = 0; i < schedule.length; i++) {
