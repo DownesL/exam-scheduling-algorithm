@@ -126,75 +126,14 @@ public class CustomSearch implements SearchAlgorithm {
                 e. calculate the new score & repeat
         */
 
-        int supplier, receiver, packetIndex;
         Random random = new Random(2344532L);
 
         timeSlots = bestSolution.timeSlots;
 
         int count = 0;
         for (int i = 0; i < numberOfIterations; i++) {
-            supplier = random.nextInt(timeSlots.size());
-            receiver = random.nextInt(timeSlots.size());
-
-            while (supplier == receiver) {
-                receiver = random.nextInt(timeSlots.size());
-            }
-
-            if (supplier > receiver) {
-                int temp = receiver;
-                receiver = supplier;
-                supplier = temp;
-            }
-            TimeSlot[] keySet = timeSlots.keySet().toArray(TimeSlot[]::new);
-
-            TimeSlot supplierTimeslot = keySet[supplier];
-            TimeSlot receiverTimeslot = keySet[receiver];
-
-            List<Exam> supplierExams = timeSlots.get(supplierTimeslot);
-            List<Exam> receiverExams = timeSlots.get(receiverTimeslot);
-
-            if (supplierExams.isEmpty()) {
-                continue;
-            }
-            packetIndex = random.nextInt(supplierExams.size());
-
-            Exam packet = supplierExams.get(packetIndex);
-            supplierExams.remove(packetIndex);
-            receiverExams.add(packet);
-
-            List<Integer> receiverExamIds = receiverExams.stream().map(Exam::getID).toList();
-            boolean hardConstrainFail = false;
-            for (int studentId : packet.getSID()) {
-                Student stud = students.get(studentId);
-                List<Integer> studExamIds = new ArrayList<>(stud.getExamIds());
-                int initialLen = studExamIds.size();
-                studExamIds.retainAll(receiverExamIds);
-                int endLen = studExamIds.size();
-                if (endLen > 1) {
-                    hardConstrainFail = true;
-                    break;
-                }
-            }
-
-            if (hardConstrainFail) {
-                receiverExams.remove(packet);
-                supplierExams.add(packet);
-                continue;
-            }else {
-                count++;
-            }
-            currentSolution.setTimeSlots(timeSlots);
-
-            double newScore = calculateTotalScore(currentSolution);
-            currentSolution.setScore(newScore);
-
-            if (newScore < bestSolution.getScore()) {
-                bestSolution = currentSolution.clone();
-
-            } else {
-                receiverExams.remove(packet);
-                supplierExams.add(packet);
-            }
+            count = performExamSwitcheroo(random, count);
+            continue;
 
 //            System.out.println(newScore);
 
@@ -202,7 +141,110 @@ public class CustomSearch implements SearchAlgorithm {
 
         System.out.println("final score: " + bestSolution.getScore());
 
+        System.out.println("**********************************");
+        timeSlots.forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+
         return 0;
+    }
+
+    private int performExamSwitcheroo(Random random, int count) {
+        int receiverIndex, supplierIndex, packetIndex;
+
+        int[] indexArr = getRandomIndexes(random);
+
+        supplierIndex = indexArr[0];
+        receiverIndex = indexArr[1];
+
+        TimeSlot[] keySet = timeSlots.keySet().toArray(TimeSlot[]::new);
+
+        TimeSlot supplierTimeslot = keySet[supplierIndex];
+        TimeSlot receiverTimeslot = keySet[receiverIndex];
+
+        List<Exam> supplierExams = timeSlots.get(supplierTimeslot);
+        List<Exam> receiverExams = timeSlots.get(receiverTimeslot);
+
+        if (supplierExams.isEmpty()) {return count;}
+
+        packetIndex = random.nextInt(supplierExams.size());
+        Exam packet = supplierExams.get(packetIndex);
+
+        supplierExams.remove(packetIndex);
+        receiverExams.add(packet);
+
+        List<Integer> receiverExamIds = receiverExams.stream().map(Exam::getID).toList();
+        boolean hardConstrainFail = isHardConstrainFail(packet, receiverExamIds);
+
+        if (hardConstrainFail) {
+            undoExamSwitch(receiverExams, packet, supplierExams);
+            return count;
+        }
+        count++;
+
+        currentSolution.setTimeSlots(timeSlots);
+
+        double newScore = calculateTotalScore(currentSolution);
+        currentSolution.setScore(newScore);
+
+        if (newScore < bestSolution.getScore()) {
+            bestSolution = currentSolution.clone();
+
+        } else {
+            undoExamSwitch(receiverExams, packet, supplierExams);
+        }
+        return count;
+    }
+
+    private int performTimeSlotSwitcheroo(Random random, int count) {
+        int timeslot1Index, timeslot2Index, packetIndex;
+
+        int[] indexArr = getRandomIndexes(random);
+
+        timeslot2Index = indexArr[0];
+        timeslot1Index = indexArr[1];
+
+
+
+        return count;
+    }
+
+    private int[] getRandomIndexes(Random random) {
+        int supplier = random.nextInt(timeSlots.size());
+        int receiver = random.nextInt(timeSlots.size());
+
+        while (supplier == receiver) {
+            receiver = random.nextInt(timeSlots.size());
+        }
+
+        if (supplier > receiver) {
+            int temp = receiver;
+            receiver = supplier;
+            supplier = temp;
+        }
+        return new int[]{supplier, receiver};
+    }
+
+    private boolean isHardConstrainFail(Exam packet, List<Integer> receiverExamIds) {
+        boolean hardConstrainFail = false;
+        for (int studentId : packet.getSID()) {
+            Student stud = students.get(studentId);
+            List<Integer> studExamIds = new ArrayList<>(stud.getExamIds());
+            studExamIds.retainAll(receiverExamIds);
+            int endLen = studExamIds.size();
+            if (endLen > 1) {
+                hardConstrainFail = true;
+                break;
+            }
+        }
+        return hardConstrainFail;
+    }
+
+    private static void undoExamSwitch(List<Exam> receiverExams, Exam packet, List<Exam> supplierExams) {
+        receiverExams.remove(packet);
+        supplierExams.add(packet);
     }
 
     private void flattenSchedule() {
