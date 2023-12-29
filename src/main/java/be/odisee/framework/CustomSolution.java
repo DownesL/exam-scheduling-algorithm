@@ -4,10 +4,7 @@ import be.odisee.domain.Exam;
 import be.odisee.domain.Student;
 import be.odisee.domain.TimeSlot;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static be.odisee.framework.SearchHelper.getExamIndex;
 
@@ -18,12 +15,11 @@ public class CustomSolution implements Solution {
     Map<Integer, Student> students;
     Map<TimeSlot, List<Exam>> timeSlots;
 
+    double lastMoveCost;
+
     Move lastMove;
 
-    public CustomSolution(Map<Integer, Exam> examMap,
-                          Map<TimeSlot, List<Exam>> timeSlots,
-                          Map<Integer, Student> students
-    ) {
+    public CustomSolution(Map<Integer, Exam> examMap, Map<TimeSlot, List<Exam>> timeSlots, Map<Integer, Student> students) {
         this.exams = examMap;
         this.timeSlots = timeSlots;
         this.students = students;
@@ -44,6 +40,10 @@ public class CustomSolution implements Solution {
     public void setExams(Map<Integer, Exam> exams) {
 
         this.exams = exams;
+    }
+
+    public Map<Integer, Student> getStudents() {
+        return students;
     }
 
     public Map<TimeSlot, List<Exam>> getTimeSlots() {
@@ -82,16 +82,16 @@ public class CustomSolution implements Solution {
         // iterate over students and calculate the score of each schedule
         for (Student student : students.values()) {
             List<Integer> examIds = student.getExamIds();
-            double studentScore = getStudentScore(examIds);
+            double studentScore = getStudentCost(examIds);
             score += studentScore;
         }
         //average for the students
-        score /= students.size();
+//        score /= students.size();
         this.totalCost = score;
         return score;
     }
 
-    private double getStudentScore(List<Integer> examIds) {
+    private double getStudentCost(List<Integer> examIds) {
         int[] schedule = new int[13];
         double studentScore = 0;
         Arrays.fill(schedule, 0);
@@ -117,7 +117,22 @@ public class CustomSolution implements Solution {
         return studentScore;
     }
 
-    public Map<Integer, Student> getStudents() {
-        return students;
+    public double moveCost(Move move) {
+        Set<Integer> affectedStudentIDS = move.affectedStudents();
+        double scoreAfter = getStudentsCost(affectedStudentIDS);
+        move.undoMove();
+        double scoreBefore = getStudentsCost(affectedStudentIDS);
+        move.doMove();
+        return scoreAfter - scoreBefore;
     }
+
+    private double getStudentsCost(Set<Integer> affectedStudentIDS) {
+        double scoreAfter = 0;
+        for (int studentId : affectedStudentIDS) {
+            scoreAfter += getStudentCost(students.get(studentId).getExamIds());
+        }
+        return scoreAfter;
+    }
+
+
 }

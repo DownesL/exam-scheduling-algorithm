@@ -45,13 +45,13 @@ public class CustomSearch implements SearchAlgorithm {
             algorithm that flattens timeslots to distribute the exams more evenly over the period
             this is done by placing the trailing empty timeslots before the busiest timeslots
         */
-        System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost());
+        System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost() / bestSolution.getStudents().size());
 
         flattenSchedule(currentSolution);
 
         double score = currentSolution.calculateAndSetTotalCost();
 
-        System.out.println("Flattenscore: " + score);
+        System.out.println("Flattenscore: " + score / bestSolution.getStudents().size());
 
         if (score < bestSolution.calculateAndSetTotalCost()) {
             bestSolution = currentSolution.clone();
@@ -90,7 +90,7 @@ public class CustomSearch implements SearchAlgorithm {
     public int execute(int numberOfIterations) {
         for (int i = 0; i < numberOfIterations; i++) {
             if (i % 1000 == 0) {
-                System.out.print(".");
+                System.out.print("=");
                 for (int j = 0; j < 100; j++) {
                     boolean hasChanged = helper.performTimeSlotSwitcheroo(currentSolution);
                     if (hasChanged) {
@@ -99,30 +99,38 @@ public class CustomSearch implements SearchAlgorithm {
                 }
 
             } else {
-                helper.performExamSwitcheroo(currentSolution);
-                checkForImprovement(currentSolution.getLastMove());
+                boolean hasChanged = helper.performExamSwitcheroo(currentSolution);
+                if (hasChanged) {
+                    checkForImprovement(currentSolution.getLastMove());
+                }
             }
-//            System.out.println(newScore);
         }
-
+        System.out.println(">");
         System.out.println("----------------------------------");
-        System.out.println("final score: " + bestSolution.calculateAndSetTotalCost() + " avg/S");
+        System.out.println("final score: " + bestSolution.calculateAndSetTotalCost() / bestSolution.getStudents().size() + " avg/S");
         System.out.println("**********************************");
 
-//        timeSlots.forEach((timeSlot, exams1) -> {
-//            for (Exam exam : exams1) {
-//                System.out.println(exam.getID() + " " + timeSlot.getID());
-//            }
-//        });
+
+        logForBenchmark();
 
         return 0;
     }
 
-    private void checkForImprovement(Move move) {
-        double newScore = currentSolution.calculateAndSetTotalCost();
+    private void logForBenchmark() {
+        bestSolution.getTimeSlots().forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+    }
 
-         if (newScore < bestSolution.getTotalCost()) {
+    private void checkForImprovement(Move move) {
+        double newScore = currentSolution.moveCost(move);
+
+        if (newScore < 0) {
+            currentSolution.setTotalCost(currentSolution.getTotalCost() + newScore);
             bestSolution = currentSolution.clone();
+
         } else {
             move.undoMove();
         }

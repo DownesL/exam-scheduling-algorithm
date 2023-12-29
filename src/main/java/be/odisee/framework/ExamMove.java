@@ -1,8 +1,12 @@
 package be.odisee.framework;
 
 import be.odisee.domain.Exam;
+import be.odisee.domain.Student;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ExamMove implements Move {
     Exam packet;
@@ -25,5 +29,10 @@ public class ExamMove implements Move {
     public void undoMove() {
         receiverExams.remove(packet);
         supplierExams.add(packet);
+    }
+
+    @Override
+    public Set<Integer> affectedStudents() {
+        return new HashSet<>(packet.getSID());
     }
 }

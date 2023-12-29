@@ -1,11 +1,11 @@
 package be.odisee.framework;
 
 import be.odisee.domain.Exam;
+import be.odisee.domain.Student;
 import be.odisee.domain.TimeSlot;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TimeslotMove implements Move{
     Map<TimeSlot, List<Exam>> timeSlots;
@@ -26,6 +26,16 @@ public class TimeslotMove implements Move{
     @Override
     public void undoMove() {
         timeslotSwap(timeSlots, timeSlot1, timeSlot2);
+    }
+
+    @Override
+    public Set<Integer> affectedStudents() {
+        List<Exam> examList = new ArrayList<>(timeSlots.get(timeSlot1));
+        examList.addAll(timeSlots.get(timeSlot2));
+        return examList.stream()
+                .map(Exam::getSID)
+                .flatMap(List::stream)
+                .collect(Collectors.toSet());
     }
 
     private void timeslotSwap(Map<TimeSlot, List<Exam>> timeSlots, TimeSlot timeSlot1, TimeSlot timeSlot2) {
