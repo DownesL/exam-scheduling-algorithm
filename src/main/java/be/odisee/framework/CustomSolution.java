@@ -21,8 +21,8 @@ public class CustomSolution implements Solution {
 
     public CustomSolution(Map<Integer, Exam> examMap, Map<TimeSlot, List<Exam>> timeSlots, Map<Integer, Student> students) {
         this.exams = examMap;
-        this.timeSlots = timeSlots;
         this.students = students;
+        this.timeSlots = timeSlots;
     }
 
     public Move getLastMove() {
@@ -96,7 +96,7 @@ public class CustomSolution implements Solution {
         double studentScore = 0;
         Arrays.fill(schedule, 0);
         for (int examId : examIds) {
-            Optional<TimeSlot> ts = getExamIndex(this, examId);
+            Optional<TimeSlot> ts = getExamIndex( this, examId);
             ts.ifPresent(timeSlot -> schedule[timeSlot.getID()] = 1);
         }
         int last = -1;
@@ -106,10 +106,10 @@ public class CustomSolution implements Solution {
                     last = i;
                 } else {
                     int delta = i - last;
-                    if (delta > 4) {
-                        delta = 5;
+                    if (delta > 5) {
+                        continue;
                     }
-                    studentScore += schedule[i] * (2 << (3 - delta + 1));
+                    studentScore += schedule[i] * (1 << (5 - delta));
                     last = i;
                 }
             }
@@ -135,4 +135,8 @@ public class CustomSolution implements Solution {
     }
 
 
+    @Override
+    public int compareTo(Solution o) {
+        return Comparator.comparingDouble(Solution::getTotalCost).compare(this, o);
+    }
 }

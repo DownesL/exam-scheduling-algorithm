@@ -7,4 +7,6 @@ public interface SearchAlgorithm {
 
 
     int execute(int numberOfIterations) ;
+
+    public void checkForImprovement(Move move);
 }

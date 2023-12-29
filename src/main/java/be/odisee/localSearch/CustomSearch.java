@@ -27,7 +27,8 @@ public class CustomSearch implements SearchAlgorithm {
 
         Map<Integer, Exam> exams = dataReader.getExams();
         Map<TimeSlot, List<Exam>> timeSlots = new HashMap<>();
-        Map<Integer, Student> students = dataReader.getStudents();
+//        Map<TimeSlot, List<Exam>> timeSlots = dataReader.getTimeSlots();
+         Map<Integer, Student> students = dataReader.getStudents();
 
         dataReader.getTimeslots().forEach(
                 timeSlot -> timeSlots.put(timeSlot, new ArrayList<>())
@@ -37,21 +38,24 @@ public class CustomSearch implements SearchAlgorithm {
 
         helper.fillTimeTable(currentSolution);
 
-        currentSolution.calculateAndSetTotalCost();
+        initializeBestSolution();
+    }
 
+    private void initializeBestSolution() {
+        currentSolution.calculateAndSetTotalCost();
         bestSolution = currentSolution.clone();
 
         /*
             algorithm that flattens timeslots to distribute the exams more evenly over the period
             this is done by placing the trailing empty timeslots before the busiest timeslots
         */
-        System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost() / bestSolution.getStudents().size());
+        System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost());
 
         flattenSchedule(currentSolution);
 
         double score = currentSolution.calculateAndSetTotalCost();
 
-        System.out.println("Flattenscore: " + score / bestSolution.getStudents().size());
+        System.out.println("Flattenscore: " + score);
 
         if (score < bestSolution.calculateAndSetTotalCost()) {
             bestSolution = currentSolution.clone();
@@ -124,7 +128,7 @@ public class CustomSearch implements SearchAlgorithm {
         });
     }
 
-    private void checkForImprovement(Move move) {
+        public void checkForImprovement(Move move) {
         double newScore = currentSolution.moveCost(move);
 
         if (newScore < 0) {

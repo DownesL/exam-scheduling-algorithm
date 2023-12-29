@@ -6,10 +6,7 @@ import be.odisee.domain.Student;
 import be.odisee.domain.TimeSlot;
 import be.odisee.framework.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static be.odisee.framework.SearchHelper.flattenSchedule;
 
@@ -19,6 +16,8 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     CustomSolution bestSolution;
     DataReader dataReader;
     SearchHelper helper;
+
+    PriorityQueue<Solution> recentSolutions;
 
     public LateAcceptanceSearch(DataReader dataReader) {
         RandomGenerator randomGenerator = new RandomGenerator();
@@ -34,7 +33,15 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         );
 
         currentSolution = new CustomSolution(exams, timeSlots, students);
+
         helper.fillTimeTable(currentSolution);
+
+        recentSolutions = new PriorityQueue<>(Comparator.reverseOrder());
+
+        initializeBestSolution();
+    }
+
+    private void initializeBestSolution() {
         currentSolution.calculateAndSetTotalCost();
         bestSolution = currentSolution.clone();
 
@@ -53,6 +60,8 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         if (score < bestSolution.calculateAndSetTotalCost()) {
             bestSolution = currentSolution.clone();
         }
+
+        recentSolutions.add(currentSolution);
     }
 
     @Override
@@ -68,10 +77,48 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     @Override
     public int execute(int numberOfIterations) {
 
+        for (int i = 0; i < numberOfIterations; i++) {
+            boolean hasChanged;
 
-
-
+            if (doOther) {
+                hasChanged = helper.performTimeSlotSwitcheroo(currentSolution);
+            } else {
+                hasChanged = helper.performExamSwitcheroo(currentSolution);
+            }
+            if (hasChanged) {
+                checkForImprovement(currentSolution.getLastMove());
+            }
+        }
+        while (recentSolutions.size() > 1) {
+            recentSolutions.remove();
+        }
+        System.out.println(recentSolutions.peek().getTotalCost() / currentSolution.getExams().size());
+        System.out.println(recentSolutions.peek().getTotalCost());
         return 0;
     }
+    private int count = 0;
+    boolean doOther = false;
+    @Override
+    public void checkForImprovement(Move move) {
+        double newScore = currentSolution.moveCost(move);
+        double tempScore = currentSolution.getTotalCost() + newScore;
+        if (recentSolutions.size() == 0)
+            return;
+        if (tempScore < recentSolutions.peek().getTotalCost()) {
+            currentSolution.setTotalCost(tempScore);
+            recentSolutions.add(currentSolution.clone());
+            System.out.println(tempScore);
+            if (recentSolutions.size() > 1000) {
+                recentSolutions.remove();
+            }
+        } else {
+            count++;
+            if (count % 100 == 0) {
+                doOther = !doOther;
+            }
+            move.undoMove();
+        }
+    }
 
+    ;
 }
