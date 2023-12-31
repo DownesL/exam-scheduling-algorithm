@@ -101,17 +101,6 @@ public class CustomSolution implements Solution {
         return totalCost;
     }
     public double calTotCost() {
-//        double score = 0.0;
-//        // iterate over students and calculate the score of each schedule
-//        for (Student student : students.values()) {
-//            List<Integer> examIds = student.getExamIds();
-//            double studentScore = getStudentCost(examIds);
-//            score += studentScore;
-//        }
-//        //average for the students
-////        score /= students.size();
-//        this.totalCost = score;
-//        return score;
         double score = 0.0;
         for (int i = 0; i < exams.size() - 1; i++) {
             for (int j = i + 1; j < exams.size(); j++) {
