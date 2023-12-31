@@ -93,9 +93,9 @@ public class SearchHelper {
                     continue;
                 }
                 //extra constraint
-//                while(solution.timeSlots.get(timeSlot).size()+1 > 15) {
-//                    timeSlot =  timeSlotIterator.next();
-//                }
+                while(solution.timeSlots.get(timeSlot).size()+1 > 15) {
+                    timeSlot =  timeSlotIterator.next();
+                }
                 solution.timeSlots.get(timeSlot).add(solution.exams.get(i));
                 timeSlot = timeSlotIterator.next();
             }

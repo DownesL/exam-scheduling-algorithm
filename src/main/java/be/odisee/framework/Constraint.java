@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class Constraint {
     public boolean isHardConstrainFail(Map<Integer, Student> students, Exam packet, List<Integer> receiverExamIds) {
         // extra constraint
-        //if (receiverExamIds.size() + 1 > 15) return true;
+        if (receiverExamIds.size() + 1 > 15) return true;
         for (int studentId : packet.getSID()) {
             Student stud = students.get(studentId);
             List<Integer> studExamIds = new ArrayList<>(stud.getExamIds());
