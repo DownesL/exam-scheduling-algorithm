@@ -123,51 +123,14 @@ public class CustomSolution implements Solution {
         return 1 << (5 - delta);
     }
 
-    private double getStudentCost(List<Integer> examIds) {
-        int[] schedule = new int[13];
-        double studentScore = 0;
-        Arrays.fill(schedule, 0);
-        for (int examId : examIds) {
-            Optional<TimeSlot> ts = getExamIndex(this, examId);
-            ts.ifPresent(timeSlot -> schedule[timeSlot.getID()] = 1);
-        }
-        int last = -1;
-        for (int i = 0; i < schedule.length; i++) {
-            if (schedule[i] == 1) {
-                if (last == -1) {
-                    last = i;
-                } else {
-                    int delta = i - last;
-                    if (delta > 5) {
-                        continue;
-                    }
-                    studentScore += schedule[i] * (1 << (5 - delta));
-                    last = i;
-                }
-            }
-        }
-        return studentScore;
-    }
-
     public double moveCost(Move move) {
-        Set<Integer> affectedStudentIDS = move.affectedStudents();
-//        double scoreAfter = getStudentsCost(affectedStudentIDS);
+        //Set<Integer> affectedStudentIDS = move.affectedStudents();
         double scoreAfter = calTotCost();
         move.undoMove();
-//        double scoreBefore = getStudentsCost(affectedStudentIDS);
         double scoreBefore = calTotCost();
         move.doMove();
         return scoreAfter - scoreBefore;
     }
-
-    private double getStudentsCost(Set<Integer> affectedStudentIDS) {
-        double scoreAfter = 0;
-        for (int studentId : affectedStudentIDS) {
-            scoreAfter += getStudentCost(students.get(studentId).getExamIds());
-        }
-        return scoreAfter;
-    }
-
 
     @Override
     public int compareTo(Solution o) {

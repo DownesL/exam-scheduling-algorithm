@@ -1,13 +1,13 @@
 package be.odisee.framework;
 
-import java.util.Random;
+import java.util.*;
 
 public class RandomGenerator {
     Random random;
     public RandomGenerator() {
         random = new Random(2344532L);
     }
-    public int[] getRandomIndexes(int size) {
+    public int[] getTwoRandomIndexes(int size) {
         int supplier = random.nextInt(size);
         int receiver = random.nextInt(size);
 
@@ -21,6 +21,15 @@ public class RandomGenerator {
             supplier = temp;
         }
         return new int[]{supplier, receiver};
+    }
+
+    public int[] getRandomIndexes(int size) {
+        List<Integer> arr = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            arr.add(i);
+        }
+        Collections.shuffle(arr);
+        return arr.stream().mapToInt(value -> value).toArray();
     }
 
     public int next(int size) {

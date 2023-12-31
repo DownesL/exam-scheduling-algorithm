@@ -18,6 +18,8 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     SearchHelper helper;
 
     PriorityQueue<Solution> recentSolutions;
+    boolean doOther = false;
+    private int count = 0;
 
     public LateAcceptanceSearch(DataReader dataReader) {
         RandomGenerator randomGenerator = new RandomGenerator();
@@ -94,31 +96,38 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         }
         System.out.println(recentSolutions.peek().getTotalCost() / currentSolution.getExams().size());
         System.out.println(recentSolutions.peek().getTotalCost());
+        logForBenchmark();
         return 0;
     }
-    private int count = 0;
-    boolean doOther = false;
+
+    private void logForBenchmark() {
+        bestSolution.getTimeSlots().forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+    }
+
     @Override
     public void checkForImprovement(Move move) {
         double newScore = currentSolution.moveCost(move);
         double tempScore = currentSolution.getTotalCost() + newScore;
         if (recentSolutions.size() == 0)
             return;
+        System.out.println(tempScore);
         if (tempScore < recentSolutions.peek().getTotalCost()) {
             currentSolution.setTotalCost(tempScore);
             recentSolutions.add(currentSolution.clone());
-            System.out.println(tempScore);
             if (recentSolutions.size() > 1000) {
                 recentSolutions.remove();
             }
         } else {
             count++;
             if (count % 100 == 0) {
-                doOther = !doOther;
+//                doOther = !doOther;
             }
             move.undoMove();
         }
     }
 
-    ;
 }

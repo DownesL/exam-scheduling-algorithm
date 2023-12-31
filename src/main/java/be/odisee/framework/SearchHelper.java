@@ -116,13 +116,7 @@ public class SearchHelper {
 
         int[] indexArr = randomGenerator.getRandomIndexes(size);
 
-        timeslot1Index = indexArr[0];
-        timeslot2Index = indexArr[1];
-
-        TimeSlot timeSlot1 = timeSlotKeys[timeslot1Index];
-        TimeSlot timeSlot2 = timeSlotKeys[timeslot2Index];
-
-        Move move = new TimeslotMove(timeSlots, timeSlot1, timeSlot2);
+        Move move = new TimeslotMove(timeSlots, indexArr);
         move.doMove();
         currentSolution.setLastMove(move);
         return true;
@@ -140,7 +134,7 @@ public class SearchHelper {
         int size = timeSlotKeys.length;
         Map<Integer, Student> students = currentSolution.getStudents();
 
-        int[] indexArr = randomGenerator.getRandomIndexes(size);
+        int[] indexArr = randomGenerator.getTwoRandomIndexes(size);
 
         supplierIndex = indexArr[0];
         receiverIndex = indexArr[1];
