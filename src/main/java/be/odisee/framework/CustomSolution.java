@@ -44,6 +44,10 @@ public class CustomSolution implements Solution {
         System.out.println();
     }
 
+    public boolean checkConflictMatrixIsConflict(Exam exam1, Exam exam2) {
+        return conflictMatrix[exam1.getID() - 1][exam2.getID() -1] > 0;
+    }
+
     public Move getLastMove() {
         return lastMove;
     }

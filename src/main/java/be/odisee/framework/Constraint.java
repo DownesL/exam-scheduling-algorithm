@@ -6,12 +6,9 @@ import be.odisee.domain.Student;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Constraint {
     public boolean isHardConstrainFail(Map<Integer, Student> students, Exam packet, List<Integer> receiverExamIds) {
-        // extra constraint
-        if (receiverExamIds.size() + 1 > 15) return true;
         for (int studentId : packet.getSID()) {
             Student stud = students.get(studentId);
             List<Integer> studExamIds = new ArrayList<>(stud.getExamIds());
@@ -21,6 +18,14 @@ public class Constraint {
                 return true;
             }
         }
+        return false;
+    }
+    public boolean isHardConstrainFail(CustomSolution customSolution, List<Exam> examList, Exam exam2) {
+        for (Exam exam1 :
+                examList) {
+            if (customSolution.checkConflictMatrixIsConflict(exam1, exam2)) return true;
+        }
+
         return false;
     }
 }

@@ -28,7 +28,7 @@ public class CustomSearch implements SearchAlgorithm {
         Map<Integer, Exam> exams = dataReader.getExams();
         Map<TimeSlot, List<Exam>> timeSlots = new HashMap<>();
 //        Map<TimeSlot, List<Exam>> timeSlots = dataReader.getTimeSlots();
-         Map<Integer, Student> students = dataReader.getStudents();
+        Map<Integer, Student> students = dataReader.getStudents();
 
         dataReader.getTimeslots().forEach(
                 timeSlot -> timeSlots.put(timeSlot, new ArrayList<>())
@@ -128,9 +128,10 @@ public class CustomSearch implements SearchAlgorithm {
         });
     }
 
-        public void checkForImprovement(Move move) {
+    public void checkForImprovement(Move move) {
         double newScore = currentSolution.moveCost(move);
 
+//        System.out.println(currentSolution.getTotalCost() + newScore);
         if (newScore < 0) {
             currentSolution.setTotalCost(currentSolution.getTotalCost() + newScore);
             bestSolution = currentSolution.clone();

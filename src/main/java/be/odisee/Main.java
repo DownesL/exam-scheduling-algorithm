@@ -13,6 +13,6 @@ public class Main {
         SearchAlgorithm customSearch = new CustomSearch(dataReader);
 //        SearchAlgorithm lateAcceptanceSearch = new LateAcceptanceSearch(dataReader);
         customSearch.execute(10000);
-//        lateAcceptanceSearch.execute(10000);
+//        lateAcceptanceSearch.execute(100000);
     }
 }

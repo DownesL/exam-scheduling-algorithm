@@ -50,7 +50,7 @@ public class SearchHelper {
 
     public static Optional<TimeSlot> getExamIndex(CustomSolution solution, int examId) {
         Map<TimeSlot, List<Exam>> timeSlots = solution.getTimeSlots();
-        Set<TimeSlot> keyset= timeSlots.keySet();
+        Set<TimeSlot> keyset = timeSlots.keySet();
         for (TimeSlot timeSlot : keyset) {
             Optional<Exam> exam = timeSlots
                     .get(timeSlot)
@@ -77,6 +77,7 @@ public class SearchHelper {
         Set<Integer> examIds = new LinkedHashSet<>();
 
         TimeSlot[] initialTimeSlotIterator = solution.timeSlots.keySet().toArray(new TimeSlot[0]);
+
         Arrays.sort(initialTimeSlotIterator);
 
         while (!studentQueue.isEmpty()) {
@@ -84,20 +85,24 @@ public class SearchHelper {
             Set<Integer> sEids = new HashSet<>(student.getExamIds());
 
             //This iterator makes sure the timeslots are filled from start to end
-            Iterator<TimeSlot> timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
-            TimeSlot timeSlot = timeSlotIterator.next();
 
             for (int i : sEids) {
-
                 if (examIds.contains(i)) {
                     continue;
                 }
-                //extra constraint
-                while(solution.timeSlots.get(timeSlot).size()+1 > 15) {
-                    timeSlot =  timeSlotIterator.next();
+                Iterator<TimeSlot> timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
+                TimeSlot timeSlot = timeSlotIterator.next();
+                List<Exam> timeSlotExams = solution.timeSlots.get(timeSlot);
+                Exam exam = solution.exams.get(i);
+
+                while (constraint.isHardConstrainFail(solution, timeSlotExams, exam)) {
+                    if (timeSlotIterator.hasNext()) timeSlot = timeSlotIterator.next();
+                    else timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
+                    timeSlotExams = solution.timeSlots.get(timeSlot);
                 }
-                solution.timeSlots.get(timeSlot).add(solution.exams.get(i));
-                timeSlot = timeSlotIterator.next();
+                timeSlotExams.add(exam);
+                if (timeSlotIterator.hasNext()) timeSlot = timeSlotIterator.next();
+                else timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
             }
             examIds.addAll(sEids);
         }

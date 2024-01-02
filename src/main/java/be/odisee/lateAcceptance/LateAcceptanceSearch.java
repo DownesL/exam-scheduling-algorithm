@@ -94,8 +94,19 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         }
         System.out.println(recentSolutions.peek().getTotalCost() / currentSolution.getExams().size());
         System.out.println(recentSolutions.peek().getTotalCost());
+        logForBenchmark();
+
         return 0;
     }
+
+    private void logForBenchmark() {
+        bestSolution.getTimeSlots().forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+    }
+
     private int count = 0;
     boolean doOther = false;
     @Override
@@ -107,7 +118,7 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         if (tempScore < recentSolutions.peek().getTotalCost()) {
             currentSolution.setTotalCost(tempScore);
             recentSolutions.add(currentSolution.clone());
-            System.out.println(tempScore);
+//            System.out.println(tempScore);
             if (recentSolutions.size() > 1000) {
                 recentSolutions.remove();
             }
