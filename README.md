@@ -23,4 +23,10 @@ Vervolgens wordt er een verbetering toegepast. Deze verbetering zorgt ervoor dat
 Mijn 1ste oplossing bekom ik door een simpele local search algoritme toe te passen op mijn initiele oplossing. Elke iteratie wordt een verandering toegepast, nl. een exame wordt in een andere tijdslot geplaatst (als deze beweging geen hardconstraint breekt). Hierdoor bekom ik een goede oplossing. Om te zorgen dat ik uit lokale minima geraak, gebruik ik een 2e soort veranderingsfunctie. Hierbij worden 2 timeslots van plek gewisseld om te zien of er een verbetering plaatsvindt. Om de 1000 iteraties van de 1ste beweging voer ik 100 iteraties uit van de 2e beweging.
 
 #### Late Acceptance
-Voor mijn 2e algoritme gebruik een versie van Late Acceptance. Om zeker te zijn dat ik toch nog een beetje betere scores krijg, doe ik om de 
+Voor mijn 2e algoritme gebruik een versie van Late Acceptance. Om zeker te zijn dat ik toch nog een beetje betere scores krijg, doe ik weer om de 1000 iteraties 100 iteraties van de 2e beweging.
+
+## Resultaten
+
+Mijn resultaten zijn redelijk goed. Voor mijn 1ste algoritme kom ik op (met een gunstige seed) gemakkelijk op een score vane 168 volgens de benchmark.
+Het 2e algoritme scoort een beetje minder goed, en steeds ongeveer 5-10 punten hoger.
+Opmerkelijk is dat de beste scores volgens mijn berekeningen niet het beste resultaat geven volgens de benchmark applicatie en dit doet mij vermoeden dat ik toch iets fout doe.  
