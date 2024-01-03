@@ -152,18 +152,6 @@ public class CustomSolution implements Solution {
         }
         return studentScore;
     }
-
-    public double moveCost(Move move) {
-        Set<Integer> affectedStudentIDS = move.affectedStudents();
-//        double scoreAfter = getStudentsCost(affectedStudentIDS);
-        double scoreAfter = calTotCost();
-        move.undoMove();
-//        double scoreBefore = getStudentsCost(affectedStudentIDS);
-        double scoreBefore = calTotCost();
-        move.doMove();
-        return scoreAfter - scoreBefore;
-    }
-
     private double getStudentsCost(Set<Integer> affectedStudentIDS) {
         double scoreAfter = 0;
         for (int studentId : affectedStudentIDS) {
@@ -172,6 +160,13 @@ public class CustomSolution implements Solution {
         return scoreAfter;
     }
 
+    public void logForBenchmark() {
+        timeSlots.forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+    }
 
     @Override
     public int compareTo(Solution o) {

@@ -6,7 +6,7 @@ public interface SearchAlgorithm {
     Solution getCurrentSolution();
 
 
-    int execute(int numberOfIterations) ;
+    Solution execute(int numberOfIterations) ;
 
     public void checkForImprovement(Move move);
 }

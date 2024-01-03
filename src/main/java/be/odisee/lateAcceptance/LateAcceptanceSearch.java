@@ -8,7 +8,6 @@ import be.odisee.framework.*;
 
 import java.util.*;
 
-import static be.odisee.framework.SearchHelper.flattenSchedule;
 
 public class LateAcceptanceSearch implements SearchAlgorithm {
 
@@ -19,8 +18,7 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
 
     PriorityQueue<Solution> recentSolutions;
 
-    public LateAcceptanceSearch(DataReader dataReader) {
-        RandomGenerator randomGenerator = new RandomGenerator();
+    public LateAcceptanceSearch(DataReader dataReader, RandomGenerator randomGenerator) {
         helper = new SearchHelper(randomGenerator);
         this.dataReader = dataReader;
 
@@ -51,7 +49,7 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         */
         System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost());
 
-        flattenSchedule(currentSolution);
+        helper.flattenSchedule(currentSolution, 3);
 
         double score = currentSolution.calculateAndSetTotalCost();
 
@@ -75,51 +73,48 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     }
 
     @Override
-    public int execute(int numberOfIterations) {
+    public Solution execute(int numberOfIterations) {
 
         for (int i = 0; i < numberOfIterations; i++) {
-            boolean hasChanged;
+            if (i % 1000 == 0) {
+                System.out.print("=");
+                for (int j = 0; j < 100; j++) {
+                    boolean hasChanged = helper.performTimeSlotSwitcheroo(currentSolution);
+                    if (hasChanged) {
+                        checkForImprovement(currentSolution.getLastMove());
+                    }
+                }
 
-            if (doOther) {
-                hasChanged = helper.performTimeSlotSwitcheroo(currentSolution);
             } else {
-                hasChanged = helper.performExamSwitcheroo(currentSolution);
-            }
-            if (hasChanged) {
-                checkForImprovement(currentSolution.getLastMove());
+                boolean hasChanged = helper.performExamSwitcheroo(currentSolution);
+                if (hasChanged) {
+                    checkForImprovement(currentSolution.getLastMove());
+                }
             }
         }
+
         while (recentSolutions.size() > 1) {
             recentSolutions.remove();
         }
         System.out.println(recentSolutions.peek().getTotalCost() / currentSolution.getExams().size());
         System.out.println(recentSolutions.peek().getTotalCost());
-        logForBenchmark();
 
-        return 0;
-    }
-
-    private void logForBenchmark() {
-        bestSolution.getTimeSlots().forEach((timeSlot, exams1) -> {
-            for (Exam exam : exams1) {
-                System.out.println(exam.getID() + " " + timeSlot.getID());
-            }
-        });
+        bestSolution = ((CustomSolution) recentSolutions.peek()).clone();
+        return bestSolution;
     }
 
     private int count = 0;
     boolean doOther = false;
     @Override
     public void checkForImprovement(Move move) {
-        double newScore = currentSolution.moveCost(move);
-        double tempScore = currentSolution.getTotalCost() + newScore;
+        double tempScore = currentSolution.calTotCost();
         if (recentSolutions.size() == 0)
             return;
         if (tempScore < recentSolutions.peek().getTotalCost()) {
             currentSolution.setTotalCost(tempScore);
             recentSolutions.add(currentSolution.clone());
 //            System.out.println(tempScore);
-            if (recentSolutions.size() > 1000) {
+            if (recentSolutions.size() > 13) {
                 recentSolutions.remove();
             }
         } else {

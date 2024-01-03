@@ -10,6 +10,7 @@ import java.util.Map;
 public interface Solution extends Cloneable, Comparable<Solution> {
 
 
+    void logForBenchmark();
 
     Object clone();
 

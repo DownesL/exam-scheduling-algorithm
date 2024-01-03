@@ -5,7 +5,10 @@ import java.util.Random;
 public class RandomGenerator {
     Random random;
     public RandomGenerator() {
-        random = new Random(2344532L);
+        random = new Random(23432L);
+    }
+    public RandomGenerator(long seed) {
+        random = new Random(seed);
     }
     public int[] getRandomIndexes(int size) {
         int supplier = random.nextInt(size);

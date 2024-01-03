@@ -15,7 +15,12 @@ public class Exam implements Serializable {
     private static int _ID = 1;
     private int internalID;
 
-    public Exam() {
+    public Exam(Exam exam) {
+        this.ID = exam.ID;
+        this.name = exam.name;
+        this.sID = exam.sID;
+        this.numberOfStudents = exam.numberOfStudents;
+        this.internalID = exam.internalID;
     }
 
     public Exam(int ID, int numberOfStudents) {
