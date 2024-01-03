@@ -25,6 +25,32 @@ public class DataReader {
         readExams();
         readStudents();
     }
+    public Map<TimeSlot, List<Exam>> getTimeSlots() {
+        File tsf= new File("benchmarks/lol.txt");
+        Scanner timeslotScanner;
+            HashMap<TimeSlot, List<Exam>> timeslots = new HashMap<>();
+        try {
+            timeslotScanner = new Scanner(tsf);
+            while (timeslotScanner.hasNextLine()) {
+                String nextLine = timeslotScanner.nextLine();
+                Scanner sc = new Scanner(nextLine);
+                sc.useDelimiter(":");
+                int examId = sc.nextInt();
+                int tsId = sc.nextInt();
+                if (timeslots.containsKey(new TimeSlot(tsId))) {
+                    timeslots.get(new TimeSlot(tsId)).add(exams.get(examId));
+                }else {
+                    List<Exam> x = new ArrayList<>();
+                    x.add(exams.get(examId));
+                    timeslots.put(new TimeSlot(tsId), x);
+                }
+            }
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return timeslots;
+    }
 
     private void readTimeSlots() {
         if (eFileName.endsWith(".crs")) {

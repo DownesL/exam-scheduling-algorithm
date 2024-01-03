@@ -6,12 +6,8 @@ import be.odisee.domain.Student;
 import be.odisee.domain.TimeSlot;
 import be.odisee.framework.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static be.odisee.framework.SearchHelper.flattenSchedule;
 
 public class LateAcceptanceSearch implements SearchAlgorithm {
 
@@ -20,8 +16,9 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     DataReader dataReader;
     SearchHelper helper;
 
-    public LateAcceptanceSearch(DataReader dataReader) {
-        RandomGenerator randomGenerator = new RandomGenerator();
+    PriorityQueue<Solution> recentSolutions;
+
+    public LateAcceptanceSearch(DataReader dataReader, RandomGenerator randomGenerator) {
         helper = new SearchHelper(randomGenerator);
         this.dataReader = dataReader;
 
@@ -34,7 +31,15 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         );
 
         currentSolution = new CustomSolution(exams, timeSlots, students);
+
         helper.fillTimeTable(currentSolution);
+
+        recentSolutions = new PriorityQueue<>(Comparator.reverseOrder());
+
+        initializeBestSolution();
+    }
+
+    private void initializeBestSolution() {
         currentSolution.calculateAndSetTotalCost();
         bestSolution = currentSolution.clone();
 
@@ -44,7 +49,7 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         */
         System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost());
 
-        flattenSchedule(currentSolution);
+        helper.flattenSchedule(currentSolution, 3);
 
         double score = currentSolution.calculateAndSetTotalCost();
 
@@ -53,6 +58,8 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
         if (score < bestSolution.calculateAndSetTotalCost()) {
             bestSolution = currentSolution.clone();
         }
+
+        recentSolutions.add(currentSolution);
     }
 
     @Override
@@ -66,12 +73,58 @@ public class LateAcceptanceSearch implements SearchAlgorithm {
     }
 
     @Override
-    public int execute(int numberOfIterations) {
+    public Solution execute(int numberOfIterations) {
 
+        for (int i = 0; i < numberOfIterations; i++) {
+            if (i % 1000 == 0) {
+                System.out.print("=");
+                for (int j = 0; j < 100; j++) {
+                    boolean hasChanged = helper.performTimeSlotSwitcheroo(currentSolution);
+                    if (hasChanged) {
+                        checkForImprovement(currentSolution.getLastMove());
+                    }
+                }
 
+            } else {
+                boolean hasChanged = helper.performExamSwitcheroo(currentSolution);
+                if (hasChanged) {
+                    checkForImprovement(currentSolution.getLastMove());
+                }
+            }
+        }
 
+        while (recentSolutions.size() > 1) {
+            recentSolutions.remove();
+        }
+        System.out.println(recentSolutions.peek().getTotalCost() / currentSolution.getExams().size());
+        System.out.println(recentSolutions.peek().getTotalCost());
 
-        return 0;
+        bestSolution = ((CustomSolution) recentSolutions.peek()).clone();
+        return bestSolution;
     }
 
+    private int count = 0;
+    boolean doOther = false;
+    @Override
+    public void checkForImprovement(Move move) {
+        double tempScore = currentSolution.calTotCost();
+        if (recentSolutions.size() == 0)
+            return;
+        if (tempScore < recentSolutions.peek().getTotalCost()) {
+            currentSolution.setTotalCost(tempScore);
+            recentSolutions.add(currentSolution.clone());
+//            System.out.println(tempScore);
+            if (recentSolutions.size() > 13) {
+                recentSolutions.remove();
+            }
+        } else {
+            count++;
+            if (count % 100 == 0) {
+                doOther = !doOther;
+            }
+            move.undoMove();
+        }
+    }
+
+    ;
 }

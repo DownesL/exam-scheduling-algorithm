@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static be.odisee.framework.SearchHelper.flattenSchedule;
 
 public class CustomSearch implements SearchAlgorithm {
 
@@ -20,13 +19,13 @@ public class CustomSearch implements SearchAlgorithm {
     DataReader dataReader;
     SearchHelper helper;
 
-    public CustomSearch(DataReader dataReader) {
-        RandomGenerator randomGenerator = new RandomGenerator();
+    public CustomSearch(DataReader dataReader, RandomGenerator randomGenerator) {
         helper = new SearchHelper(randomGenerator);
         this.dataReader = dataReader;
 
         Map<Integer, Exam> exams = dataReader.getExams();
         Map<TimeSlot, List<Exam>> timeSlots = new HashMap<>();
+//        Map<TimeSlot, List<Exam>> timeSlots = dataReader.getTimeSlots();
         Map<Integer, Student> students = dataReader.getStudents();
 
         dataReader.getTimeslots().forEach(
@@ -37,23 +36,26 @@ public class CustomSearch implements SearchAlgorithm {
 
         helper.fillTimeTable(currentSolution);
 
-        currentSolution.calculateAndSetTotalCost();
+        initializeBestSolution();
+    }
 
+    private void initializeBestSolution() {
+        currentSolution.calculateAndSetTotalCost();
         bestSolution = currentSolution.clone();
 
         /*
             algorithm that flattens timeslots to distribute the exams more evenly over the period
             this is done by placing the trailing empty timeslots before the busiest timeslots
         */
-        System.out.println("initial score: " + bestSolution.calculateAndSetTotalCost() / bestSolution.getStudents().size());
+//        System.out.println("initial score: " + bestSolution.getTotalCost() / bestSolution.getStudents().size());
 
-        flattenSchedule(currentSolution);
+        helper.flattenSchedule(currentSolution, 3);
 
         double score = currentSolution.calculateAndSetTotalCost();
 
-        System.out.println("Flattenscore: " + score / bestSolution.getStudents().size());
+//        System.out.println("Flattenscore: " + score / bestSolution.getStudents().size());
 
-        if (score < bestSolution.calculateAndSetTotalCost()) {
+        if (score < bestSolution.getTotalCost()) {
             bestSolution = currentSolution.clone();
         }
     }
@@ -87,7 +89,7 @@ public class CustomSearch implements SearchAlgorithm {
     }
 
     @Override
-    public int execute(int numberOfIterations) {
+    public Solution execute(int numberOfIterations) {
         for (int i = 0; i < numberOfIterations; i++) {
             if (i % 1000 == 0) {
                 System.out.print("=");
@@ -105,30 +107,15 @@ public class CustomSearch implements SearchAlgorithm {
                 }
             }
         }
-        System.out.println(">");
-        System.out.println("----------------------------------");
-        System.out.println("final score: " + bestSolution.calculateAndSetTotalCost() / bestSolution.getStudents().size() + " avg/S");
-        System.out.println("**********************************");
-
-
-        logForBenchmark();
-
-        return 0;
+        System.out.print("> ");
+        System.out.println("Best score: " + bestSolution.getTotalCost() / bestSolution.getStudents().size());
+        return bestSolution;
     }
 
-    private void logForBenchmark() {
-        bestSolution.getTimeSlots().forEach((timeSlot, exams1) -> {
-            for (Exam exam : exams1) {
-                System.out.println(exam.getID() + " " + timeSlot.getID());
-            }
-        });
-    }
-
-    private void checkForImprovement(Move move) {
-        double newScore = currentSolution.moveCost(move);
-
-        if (newScore < 0) {
-            currentSolution.setTotalCost(currentSolution.getTotalCost() + newScore);
+    public void checkForImprovement(Move move) {
+        double newScore = currentSolution.calTotCost();
+        if (newScore < bestSolution.getTotalCost()) {
+            currentSolution.setTotalCost(newScore);
             bestSolution = currentSolution.clone();
 
         } else {

@@ -17,12 +17,35 @@ public class CustomSolution implements Solution {
 
     double lastMoveCost;
 
+    int[][] conflictMatrix;
+
     Move lastMove;
 
     public CustomSolution(Map<Integer, Exam> examMap, Map<TimeSlot, List<Exam>> timeSlots, Map<Integer, Student> students) {
         this.exams = examMap;
-        this.timeSlots = timeSlots;
         this.students = students;
+        this.timeSlots = timeSlots;
+        initializeConflictMatrix();
+    }
+
+    private void initializeConflictMatrix() {
+        int size = exams.size();
+        conflictMatrix = new int[size][size];
+        for (int i = 1; i <= size; i++) {
+            for (int j = 1; j <= size; j++) {
+                Exam exam1 = exams.get(i);
+                Exam exam2 = exams.get(j);
+                List<Integer> students1 = new ArrayList<>(exam1.getSID());
+                List<Integer> students2 = new ArrayList<>(exam2.getSID());
+                students1.retainAll(students2);
+                conflictMatrix[i-1][j-1] = students1.size();
+            }
+        }
+        System.out.println();
+    }
+
+    public boolean checkConflictMatrixIsConflict(Exam exam1, Exam exam2) {
+        return conflictMatrix[exam1.getID() - 1][exam2.getID() -1] > 0;
     }
 
     public Move getLastMove() {
@@ -78,17 +101,30 @@ public class CustomSolution implements Solution {
 
 
     public double calculateAndSetTotalCost() {
+        this.totalCost = calTotCost();
+        return totalCost;
+    }
+    public double calTotCost() {
         double score = 0.0;
-        // iterate over students and calculate the score of each schedule
-        for (Student student : students.values()) {
-            List<Integer> examIds = student.getExamIds();
-            double studentScore = getStudentCost(examIds);
-            score += studentScore;
+        for (int i = 0; i < exams.size() - 1; i++) {
+            for (int j = i + 1; j < exams.size(); j++) {
+                score += conflictMatrix[i][j] * proximity(i, j);
+            }
         }
-        //average for the students
-//        score /= students.size();
-        this.totalCost = score;
         return score;
+    }
+
+    private int proximity(int i, int j) {
+        Optional<TimeSlot> ts1 = getExamIndex(this,i);
+        Optional<TimeSlot> ts2 = getExamIndex(this,j);
+        if (ts1.isEmpty() || ts2.isEmpty()) return -1;
+        int exam1Index = ts1.get().getID();
+        int exam2Index = ts2.get().getID();
+        // j >= i + 1
+        int delta = exam2Index - exam1Index;
+        if (delta < 1 || 5 < delta) return 0;
+
+        return 1 << (5 - delta);
     }
 
     private double getStudentCost(List<Integer> examIds) {
@@ -106,26 +142,16 @@ public class CustomSolution implements Solution {
                     last = i;
                 } else {
                     int delta = i - last;
-                    if (delta > 4) {
-                        delta = 5;
+                    if (delta > 5) {
+                        continue;
                     }
-                    studentScore += schedule[i] * (2 << (3 - delta + 1));
+                    studentScore += schedule[i] * (1 << (5 - delta));
                     last = i;
                 }
             }
         }
         return studentScore;
     }
-
-    public double moveCost(Move move) {
-        Set<Integer> affectedStudentIDS = move.affectedStudents();
-        double scoreAfter = getStudentsCost(affectedStudentIDS);
-        move.undoMove();
-        double scoreBefore = getStudentsCost(affectedStudentIDS);
-        move.doMove();
-        return scoreAfter - scoreBefore;
-    }
-
     private double getStudentsCost(Set<Integer> affectedStudentIDS) {
         double scoreAfter = 0;
         for (int studentId : affectedStudentIDS) {
@@ -134,5 +160,16 @@ public class CustomSolution implements Solution {
         return scoreAfter;
     }
 
+    public void logForBenchmark() {
+        timeSlots.forEach((timeSlot, exams1) -> {
+            for (Exam exam : exams1) {
+                System.out.println(exam.getID() + " " + timeSlot.getID());
+            }
+        });
+    }
 
+    @Override
+    public int compareTo(Solution o) {
+        return Comparator.comparingDouble(Solution::getTotalCost).compare(this, o);
+    }
 }

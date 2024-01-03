@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Student extends Attendee implements Serializable,Comparable {
+public class Student extends Attendee implements Serializable,Comparable<Student> {
 	
 	private List<Integer> examIds;
 	
@@ -15,7 +15,7 @@ public class Student extends Attendee implements Serializable,Comparable {
 	
 	public Student(int ID){
 		super(ID);
-		examIds = new ArrayList<Integer>();
+		examIds = new ArrayList<>();
 	}	
 
 	public List<Integer> getExamIds() {
@@ -27,7 +27,7 @@ public class Student extends Attendee implements Serializable,Comparable {
 	}
 
 	@Override
-	public int compareTo(Object o) {
-		return Integer.compare(this.getID(), ((Student) o).getID());
+	public int compareTo(Student o) {
+		return Integer.compare(this.getID(), o.getID());
 	}
 }

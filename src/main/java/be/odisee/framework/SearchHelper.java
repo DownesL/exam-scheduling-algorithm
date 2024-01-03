@@ -18,11 +18,11 @@ public class SearchHelper {
         this.randomGenerator = randomGenerator;
     }
 
-    public static void flattenSchedule(
-            CustomSolution solution
+    public void flattenSchedule(
+            CustomSolution solution,
+            int swapRows
     ) {
         Map<TimeSlot, List<Exam>> timeSlots = new HashMap<>(solution.getTimeSlots());
-        int zeroCount = (int) timeSlots.values().stream().filter(List::isEmpty).count();
         List<Integer> idsByLength = timeSlots
                 .keySet()
                 .stream()
@@ -31,18 +31,26 @@ public class SearchHelper {
                 .toList();
 
         int lastBig = idsByLength.size() - 1;
-        int firstBig = idsByLength.size() - 1 - zeroCount;
+        int firstBig = idsByLength.size() - 1 - swapRows;
 
-        List<Integer> arr = idsByLength.subList(firstBig, lastBig);
+        List<Integer> biggestTimeslots = idsByLength.subList(firstBig, lastBig);
+        List<Integer> smallestTimeslots = idsByLength.subList(0, 3);
 
         Map<TimeSlot, List<Exam>> copyMap = new HashMap<>();
-        int originalIndex = 0;
+
+        int newIndex = 0;
+        int nIndex = 0;
         for (int i = 0; i < timeSlots.size(); i++) {
-            if (arr.contains(i)) {
-                copyMap.put(new TimeSlot(i), new ArrayList<>());
+            if (biggestTimeslots.contains(i)) {
+                copyMap.put(new TimeSlot(newIndex), timeSlots.get(new TimeSlot(smallestTimeslots.get(nIndex))));
+                newIndex++;
+                copyMap.put(new TimeSlot(newIndex), timeSlots.get(new TimeSlot(biggestTimeslots.get(nIndex))));
+                newIndex++;
+                nIndex++;
+            } else if (smallestTimeslots.contains(i)) {
             } else {
-                copyMap.put(new TimeSlot(i), timeSlots.get(new TimeSlot(originalIndex)));
-                originalIndex++;
+                copyMap.put(new TimeSlot(newIndex), timeSlots.get(new TimeSlot(i)));
+                newIndex++;
             }
         }
         solution.setTimeSlots(copyMap);
@@ -50,7 +58,7 @@ public class SearchHelper {
 
     public static Optional<TimeSlot> getExamIndex(CustomSolution solution, int examId) {
         Map<TimeSlot, List<Exam>> timeSlots = solution.getTimeSlots();
-        Set<TimeSlot> keyset= timeSlots.keySet();
+        Set<TimeSlot> keyset = timeSlots.keySet();
         for (TimeSlot timeSlot : keyset) {
             Optional<Exam> exam = timeSlots
                     .get(timeSlot)
@@ -77,6 +85,7 @@ public class SearchHelper {
         Set<Integer> examIds = new LinkedHashSet<>();
 
         TimeSlot[] initialTimeSlotIterator = solution.timeSlots.keySet().toArray(new TimeSlot[0]);
+
         Arrays.sort(initialTimeSlotIterator);
 
         while (!studentQueue.isEmpty()) {
@@ -84,15 +93,22 @@ public class SearchHelper {
             Set<Integer> sEids = new HashSet<>(student.getExamIds());
 
             //This iterator makes sure the timeslots are filled from start to end
-            Iterator<TimeSlot> timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
-            TimeSlot timeSlot = timeSlotIterator.next();
 
             for (int i : sEids) {
                 if (examIds.contains(i)) {
                     continue;
                 }
-                solution.timeSlots.get(timeSlot).add(solution.exams.get(i));
-                timeSlot = timeSlotIterator.next();
+                Iterator<TimeSlot> timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
+                TimeSlot timeSlot = timeSlotIterator.next();
+                List<Exam> timeSlotExams = solution.timeSlots.get(timeSlot);
+                Exam exam = solution.exams.get(i);
+
+                while (constraint.isHardConstrainFail(solution, timeSlotExams, exam)) {
+                    if (timeSlotIterator.hasNext()) timeSlot = timeSlotIterator.next();
+                    else timeSlotIterator = stream(initialTimeSlotIterator.clone()).iterator();
+                    timeSlotExams = solution.timeSlots.get(timeSlot);
+                }
+                timeSlotExams.add(exam);
             }
             examIds.addAll(sEids);
         }
@@ -133,8 +149,6 @@ public class SearchHelper {
                 .toArray(TimeSlot[]::new);
 
         int size = timeSlotKeys.length;
-        Map<Integer, Student> students = currentSolution.getStudents();
-
         int[] indexArr = randomGenerator.getRandomIndexes(size);
 
         supplierIndex = indexArr[0];
@@ -159,9 +173,10 @@ public class SearchHelper {
         move.doMove();
         currentSolution.setLastMove(move);
 
-        List<Integer> receiverExamIds = receiverExams.stream().map(Exam::getID).toList();
-
-        boolean hardConstrainFail = constraint.isHardConstrainFail(students, packet, receiverExamIds);
+        boolean hardConstrainFail = constraint.isHardConstrainFail(currentSolution, receiverExams, packet);
+        if (receiverExams.size() > 15) {
+            hardConstrainFail = true;
+        }
 
         if (hardConstrainFail) {
             move.undoMove();
