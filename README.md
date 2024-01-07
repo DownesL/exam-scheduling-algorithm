@@ -27,6 +27,6 @@ Voor mijn 2e algoritme gebruik een versie van Late Acceptance. Om zeker te zijn 
 
 ## Resultaten
 
-Mijn resultaten zijn redelijk goed. Voor mijn 1ste algoritme kom ik op (met een gunstige seed) gemakkelijk op een score vane 168 volgens de benchmark.
+Mijn resultaten zijn redelijk goed. Voor mijn 1ste algoritme kom ik op (met een gunstige seed) gemakkelijk op een score van 168 volgens de benchmark.
 Het 2e algoritme scoort een beetje minder goed, en steeds ongeveer 5-10 punten hoger.
-Opmerkelijk is dat de beste scores volgens mijn berekeningen niet het beste resultaat geven volgens de benchmark applicatie en dit doet mij vermoeden dat ik toch iets fout doe.  
+Opmerkelijk is dat de beste scores volgens mijn berekeningen niet het beste resultaat geven volgens de benchmark applicatie en dit doet mij vermoeden dat ik toch iets fout doe.
